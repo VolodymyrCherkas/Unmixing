@@ -2,8 +2,8 @@
 % tic
 %% User Adjustible Parameters
 %they start with p_
-p_path='/media/Extended/!DATA/Gena/!!Projects/Hippocalcin/Processing_new/PC12/27042012/';   %this must end with a /
-p_fname='LA_ProtocolCombination_27.04.2012_17_16_57.tif';
+p_path='/media/Extended/!DATA/Gena/!!Projects/Hippocalcin/Processing_new/PC12/ECFP/08062012/';   %this must end with a /
+p_fname='LA_ProtocolCombination_08.06.2012_15_46_16.tif';
 p_roi_output_file_name='a_out.3D';
 %% init
 t_fname=strcat(p_path,p_fname);
@@ -36,7 +36,7 @@ end
 t_OME_struct=xml2struct(t_xml);
 %% unmarshall
 
-[A,B,C,D]=f_load(t_fname,'3412');
+[A,B,C,D,E,F]=f_load(t_fname,'123456');
 %% register
 %{
 find the transform that when applied to the first frame of B will

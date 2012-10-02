@@ -1,4 +1,13 @@
 #################
+## Matlab
+#################
+
+# Added by Hennadii Madan on 20121002
+*.m~
+matVisConfig_.mat
+
+
+#################
 ## Eclipse
 #################
 
