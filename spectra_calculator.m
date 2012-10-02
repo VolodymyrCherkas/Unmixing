@@ -94,7 +94,7 @@ for i=1:nch
 end
 
 %% 
-F0=mean(F(:,:,:,1:9),4); % before photobleaching
-F1=mean(F(:,:,:,12:20),4); % after photobleaching
-
-
+% F0=mean(F(:,:,:,1:9),4); % before photobleaching
+% F1=mean(F(:,:,:,12:20),4); % after photobleaching
+% 
+% 
