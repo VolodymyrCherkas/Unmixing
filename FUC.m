@@ -50,15 +50,7 @@ Gena Madan
 t_transform=autoXY_shift(B(:,:,1),A(:,:,1),'nonreflective similarity');
 %     save('t_transform.mat','t_transform');
 % now let's apply this transform to every frame in B and D
-t_width=size(B,2);
-t_height=size(B,1);
-%TODO: validate the input (may be not necessary with a good f_load)
-parfor k=1:size(B,3)
-    B(:,:,k)=imtransform(B(:,:,k),t_transform,'XData',[1 t_width],'YData',[1 t_height]);
-end
-parfor k=1:size(D,3)
-    D(:,:,k)=imtransform(D(:,:,k),t_transform,'XData',[1 t_width],'YData',[1 t_height]);
-end
+[B1,D1,F1]=f_apply_transform_to_sequence(t_transform,B,D,F);
 %TODO: show an overlayed image with the registration results
 %% Find noise and offset
 [t_noise_sigma,t_hwbg]=f_estimate_noise_and_offset(A);
