@@ -35,12 +35,12 @@ switch i_format
     case '123456'
         t_end=size(t_info,1);
         for i=1:floor(t_end/6)
-            varargout{1}(:,:,i)=double(imread(i_full_fname,4*(i-1)+1));
-            varargout{2}(:,:,i)=double(imread(i_full_fname,4*(i-1)+2));
-            varargout{3}(:,:,i)=double(imread(i_full_fname,4*(i-1)+3));
-            varargout{4}(:,:,i)=double(imread(i_full_fname,4*(i-1)+4));
-            varargout{5}(:,:,i)=double(imread(i_full_fname,4*(i-1)+5));
-            varargout{6}(:,:,i)=double(imread(i_full_fname,4*(i-1)+6));
+            varargout{1}(:,:,i)=double(imread(i_full_fname,6*(i-1)+1));
+            varargout{2}(:,:,i)=double(imread(i_full_fname,6*(i-1)+2));
+            varargout{3}(:,:,i)=double(imread(i_full_fname,6*(i-1)+3));
+            varargout{4}(:,:,i)=double(imread(i_full_fname,6*(i-1)+4));
+            varargout{5}(:,:,i)=double(imread(i_full_fname,6*(i-1)+5));
+            varargout{6}(:,:,i)=double(imread(i_full_fname,6*(i-1)+6));
         end
     otherwise
         errordlg('f_load:%s: unknown format string',i_format );
