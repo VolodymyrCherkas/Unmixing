@@ -5,9 +5,10 @@
 % 2. Acceptor
 % 3. Tandem
 % load data, load metadata
-% check for saturated pixels
-% compensate shading correction
+% +/- check for saturated pixels
+% - compensate shading correction
 % subtract background
+% allign XY
 % set region for averaging
 % calculate spectra
 % normalize by exposure
@@ -20,13 +21,19 @@
 par.verbose=0;          % display intermediate steps of computation
 par.disablewarnings=0;  % disable warnings - not implemented
 par.emulateDV=1;        % DV on, but L.A. in "EPI-mode" (full frame)
-par.shading=0;          % Shading correction processing
-par.saturated=0;        % Mark saturated pixels
+par.shading=0;          % Shading correction processing - not implemented yet
+par.saturated=0;        % Mark saturated pixels - not implemented
 par.bgcorr=1;           % search for and subtract background
 par.cam_offset=50;      % for PCO Sensicam VGA
 par.BG_range=[0.8 1.2]; % BG to be searched within par.cam_offset*par.BG_range
-par.autoXY_shift=1;     % perform automatic image alignment
-par.range=[0.5 0.95];   % Range of intensities in max-z, sum-L for determination of useful area for spectra calculation
+par.XY_shift.enable=1;  % perform automatic image alignment
+par.XY_shift.channel=0; % select channel to shift
+par.XY_shift.type='nonreflective similarity';   % transformation type
+par.XY_shift.interp='bicubic';                  % interpolation type
+par.XY_shift.exch=1;    % excitation channel to be used for transformation function creation
+% par.spectra.time1=0;    % frames to take average over time (spectra 1), 0 means take all frames
+% par.spectra.time2=0;    % frames to take average over time (spectra 2), 0 means take all frames
+par.spectra.range=[0.5 0.95];   % Range of intensities in max-z, sum-L for determination of useful area for spectra calculation
 par.savemat=1;          % save sequences of images to mat: EfD, EfA, xD, Rt
 par.saveFig=1;          % save firures to Images/ folder
 par.calHist=1;          % displays histograms
@@ -34,7 +41,7 @@ par.createhtml=1;       % create html with summary of results
 par.publishonline=0;    % put html to public folder to be online available
 
 
-%% Calculate donor spectra
+%% Read files into cells with data and OME
 [filename, path]=uigetfile({'*.tif';'*.*';'*.stk'},'Select all DONOR files you want to process as one dataset ','MultiSelect', 'on');
 fn=strcat(path, filename);
 
@@ -45,7 +52,7 @@ end
 % [path, name, ext] = fileparts(filename); %split filename to path, name and extension
 nf=length(fnd);         % count files
 for i=1:nf
-    [dD{i}, dOME{i}] = OME_read(fnd{1});    % donor Data for OME
+    [D{i}, OME{i}] = OME_read(fnd{i});    % donor Data for OME
 end
 
 if par.verbose
@@ -53,41 +60,80 @@ if par.verbose
     t = output([nf ' DONOR files received'], whos, toc(tStart), 0);
 end
 clear filename fn i num path
-
 %% this is a temporary part to split data into DV when FRET was not selected in software
 if par.emulateDV
     for i=1:nf 
-        sz=size(dD{i});
-        dD1{i}(1:sz(1),1:sz(2)/2,1:2:(sz(3)*2-1),sz(4))=dD{i}(1:sz(1),1:sz(2)/2,1:sz(3),sz(4));
-        dD1{i}(1:sz(1),1:sz(2)/2,2:2:(sz(3)*2),sz(4))=dD{i}(1:sz(1),sz(2)/2+1:sz(2),1:sz(3),sz(4));
+        sz=size(D{i});
+        D1{i}(1:sz(1),1:sz(2)/2,1:2:(sz(3)*2-1),1:sz(4))=D{i}(1:sz(1),1:sz(2)/2,1:sz(3),1:sz(4));
+        D1{i}(1:sz(1),1:sz(2)/2,2:2:(sz(3)*2),1:sz(4))=D{i}(1:sz(1),sz(2)/2+1:sz(2),1:sz(3),1:sz(4));
     end
-    clear dD
-    dD=dD1;
-    clear dD1
+    clear D
+    D=D1;
+    clear D1
 end
-%% 
+%% shading correction
+if par.shading
+    ;
+end
+%% calculate background with maximum of the histogram
 if par.bgcorr
-    nbins=1000;
+    nbins=100;
     for i=1:nf
-        sz=size(dD{i});
+        sz=size(D{i});
         BG{i}=zeros(sz(3),1);
         for j=1:sz(3)
-            [Dat_H, Dat_C]=diphist(dD{i}(:,:,j,:), [par.cam_offset*par.BG_range(1) par.cam_offset*par.BG_range(2)],nbins); %control of maximum is required, fitting, errors, etc
+            [Dat_H, Dat_C]=diphist(D{i}(:,:,j,:), [par.cam_offset*par.BG_range(1) par.cam_offset*par.BG_range(2)],nbins); %control of maximum is required, fitting, errors, etc
             [M(1), M(2)]=max(Dat_H);
             BG{i}(j)=Dat_C(M(2));
+            D{i}(:,:,j,:)=D{i}(:,:,j,:)-BG{i}(j);
         end
     end
 end
-%%
-
-
-
-if par.verbose
-    figure; plot(1:nch, BG, 1:nch, Offset*BG_lim(1), '.--k', 1:nch, Offset*BG_lim, '.--k') % test how was BG calculated and if there was no limit reached
-    % test histogram before I clear temporary variables
+%% check for saturation - need to think what to do with saturated pixels
+if par.saturated
+    ; % currently discarded 5% of top intensity pixels to avoid this
 end
-clear BG_* M Dat_* Offcor
-
-if par.verbose
-    t2 = output('autoXY_shift tform calculation', whos, toc(tStart2), t2);
+%% Automatic compensation of channel missalignment
+if par.XY_shift.enable
+    for i=1:nf
+        Dt=sum(D{i},4);
+        sz=size(D{i});
+        C0=Dt(:,:,(2*par.XY_shift.exch)-1);
+        C1=Dt(:,:,2*par.XY_shift.exch);
+        if ~par.XY_shift.channel
+            tform=autoXY_shift(C0, C1, par.XY_shift.type);
+            for j=1:sz(4)
+                for k=1:2:sz(3)
+                    D{i}(:,:,k,j) = imtransform(D{i}(:,:,k,j), tform, 'bicubic','XData',[1 sz(2)],'YData',[1 sz(1)]);
+                end
+            end
+        else 
+            tform=autoXY_shift(C1, C0, par.XY_shift.type);
+            for j=1:sz(4)
+                for k=2:2:sz(3)
+                    D{i}(:,:,k,j) = imtransform(D{i}(:,:,k,j), tform, 'bicubic','XData',[1 sz(2)],'YData',[1 sz(1)]);
+                end
+            end
+        end
+    end
 end
+%% set region for averaging
+for i=1:nf
+    M=sum(sum(D{i},4),3);   % sum time axis, sum channels (this will make unequal weights of channels)
+    Mask{i}=(M>(max(M(:))*par.spectra.range(1))).*(M<(max(M(:))*par.spectra.range(2))); % set Mask using par.spectra.range
+    sz=size(D{i});
+    for j=1:sz(4)
+        for k=1:sz(3)
+            S{i}(k,j)=sum(sum(D{i}(:,:,k,j).*Mask{i}))/sum(Mask{i}(:)); % calculate Lambda(time)
+        end
+    end
+    Spectra{i}=mean(S{i},2);    % average over time to have good S/N and low photobleaching
+end
+
+%% temporary part
+S_TFP_YFP.spectrum=Spectra{1};
+S_TFP_YFP.spectrum=Spectra{1}';
+S_TFP_YFP.exp=[15 15 15 15 15 15];
+S_TFP_YFP.wl=[435 435 505 505 575 575];
+S_TFP_YFP.emch=[0 1 0 1 0 1];
+figure; plot(1:6, S_TFP.Sd.spectrum./S_TFP.Sd.exp,'b', 1:6, S_YFP.Sa.spectrum./S_YFP.Sa.exp, 'r', 1:6, S_TFP_YFP.spectrum./S_TFP_YFP.exp,'g');
