@@ -1,0 +1,6 @@
+==============TODO===============
+---------NECESSARY---------
+20121005-1>Make FUC.m read filenames from a text file , so that it doesn't change so often, and introduce noise into commit diffs.
+
+---------OPTIONAL (FEATURITIS)-
+<20121005-2>Proper README file
