@@ -94,6 +94,9 @@ St1_1=(S_tan1.spectrum(i1))';%./S_tan1.exp(i1))';
 St2_0=(S_tan2.spectrum(i0))';%./S_tan2.exp(i0))';
 St2_1=(S_tan2.spectrum(i1))';%./S_tan2.exp(i1))';
 
+% Saf_1(3)=[];
+% Saf_0(3)=[];
+
 r1=nonnegative_unmix([Sd_1 Sa_1 Saf_1], St1_1');
 a1=r1(2); d1=r1(1); af1=r1(3);
 r2=nonnegative_unmix([Sd_1 Sa_1 Saf_1], St2_1');
@@ -102,5 +105,19 @@ a2=r2(2); d2=r2(1); af2=r2(3);
 % f2*FRET=St2_0-d2*Sd_0-a2*Sa_0;
 F1raw=St1_0-d1*Sd_0-a1*Sa_0-af1*Saf_0;
 F2raw=St2_0-d2*Sd_0-a2*Sa_0-af2*Saf_0;
-
 %save('tandem_test_04.10.2012.mat')
+%%
+r1=nonnegative_unmix([Sd_1 Sa_1 Saf_1], S{1}(i1,:)');
+a1=r1(:,2); d1=r1(:,1); af1=r1(:,3);
+for j=1:length(a1)
+    F(j,:)=St1_0'-d1(j)*Sd_0'-a1(j)*Sa_0'-af1(j)*Saf_0';
+end
+for k=1:3
+    Fm(k)=mean(F(11:20,k)./a1(11:20)./d1(11:20)*a1(1)*d1(1),1)/3;  %normalized by exposure
+end
+Sf.spectrum=Fm;
+Sf.spectrum(4:6)=zeros;
+Sf.exp=[3 3 3 3 3 3];
+Sf.wl=[435 505 575 435 505 575];
+Sf.emch=[0 0 0 1 1 1];
+save('Ref_FRET.mat','Sf');
