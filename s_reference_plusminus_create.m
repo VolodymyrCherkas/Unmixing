@@ -26,8 +26,29 @@
     %form the X matrix for nonnegative_unmix
             S=[S_donor.spectrum(3:6); S_acceptor.spectrum(3:6); S_auto.spectrum(3:6)];
             
-    %unmix =%%receive all non-fret concentrations
-        t_concentrations=nonnegative_unmix(S,X,'verbose',true);
+    %% unmix =%%receive all non-fret concentrations
+        t_concentrations=nonnegative_unmix(S,X,'verbose',true); %OLD variant
+
+%% test the lsqnonneg on single time frame
+    % lsqnonneg minimizes* this, where x>=0 
+    % Cx-d
+    
+    % for this convention 
+    % d : bleaching spectrum
+    % C : reference spectra
+    % x : unknown concentrations
+    
+    % form the d
+        d=X(1,:)';
+    % form the C
+        C=S';
+    
+    [x,resnorm,residual,exitflag] = lsqnonneg(C,d)
+    
+%% subtract lsqnnoneg solution from the unmixing solution
+    trt=t_concentrations(1,:);
+    ans_difference=trt-x'
+        
         
 
         
