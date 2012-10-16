@@ -23,8 +23,8 @@ S_bleach=temp_bleach_spectrum';
 %form the X matrix for nonnegative_unmix
 X=S_bleach(:,3:6);
 %% correct the reference spectra for autofluorescence
-S_donor.spectrum=S_donor.spectrum-S_auto.spectrum;
-S_donor.spectrum=f_set_negatives_to_zero(S_donor.spectrum); %temporary cheating
+% S_donor.spectrum=S_donor.spectrum-S_auto.spectrum;
+% S_donor.spectrum=f_set_negatives_to_zero(S_donor.spectrum); %temporary cheating
 
 S_acceptor.spectrum=S_acceptor.spectrum-S_auto.spectrum;
 S_acceptor.spectrum=f_set_negatives_to_zero(S_acceptor.spectrum); %temporary cheating
