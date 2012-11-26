@@ -14,6 +14,7 @@ function OME=OME_info(filename)
 % script version 04.07.2012 by Volodymyr Cherkas
 % fixed: works with old L.A. 1.6.0.6 files!!!
 % 06.07.2012 fixed nEm and nEx were wrong
+% 26.11.2012 fixed nC=1 to cause error
 %%
 XML=xml2struct(filename);
 OME.filename=filename;
@@ -57,9 +58,14 @@ end
 j=0:OME.nC:length(OME.exch)-1;
 OME.wl=zeros(1,length(OME.exch));
 if ~strcmp(OME.version, '1.6.0.6')
-    for i=1:OME.nC
-        OME.wlconf(i)=str2double(XML.OME.OME_colon_Image.OME_colon_Pixels.OME_colon_Channel{1,i}.OME_colon_LightSourceSettings.Attributes.Wavelength);
-        OME.wl(j+i)=OME.wlconf(i);
+    if (OME.nC>1)
+        for i=1:OME.nC
+            OME.wlconf(i)=str2double(XML.OME.OME_colon_Image.OME_colon_Pixels.OME_colon_Channel{1,i}.OME_colon_LightSourceSettings.Attributes.Wavelength);
+            OME.wl(j+i)=OME.wlconf(i);
+        end
+    else
+        OME.wlconf(i)=str2double(XML.OME.OME_colon_Image.OME_colon_Pixels.OME_colon_Channel.OME_colon_LightSourceSettings.Attributes.Wavelength);
+        OME.wl(j+i)=OME.wlconf;
     end
 else
     if (OME.nC>1)
