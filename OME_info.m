@@ -15,6 +15,7 @@ function OME=OME_info(filename)
 % fixed: works with old L.A. 1.6.0.6 files!!!
 % 06.07.2012 fixed nEm and nEx were wrong
 % 26.11.2012 fixed nC=1 to cause error
+% 10.01.2013 added expconf for convenience
 %%
 XML=xml2struct(filename);
 OME.filename=filename;
@@ -81,5 +82,6 @@ end
 i=1:OME.nT;
 for j=1:OME.nC
     OME.time_ch(i,j)=OME.time((i-1)*OME.nC+j);
+    OME.expconf(j)=OME.exp(j);
 end
 
