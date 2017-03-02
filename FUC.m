@@ -2,8 +2,8 @@
 % tic
 %% User Adjustible Parameters
 %they start with p_
-p_path='/media/Extended/!DATA/Gena/!!Projects/Hippocalcin/Processing_new/PC12/ECFP/08062012/';   %this must end with a /
-p_fname='LA_ProtocolCombination_08.06.2012_15_46_16.tif';
+p_path='/media/Extended/!DATA/Gena/!!Projects/Hippocalcin/Processing_new/PC12/ECFP-EYFP/08062012/';   %this must end with a /
+p_fname='LA_ProtocolCombination_08.06.2012_14_58_23.tif';
 p_roi_output_file_name='a_out.3D';
 %% init
 t_fname=strcat(p_path,p_fname);
