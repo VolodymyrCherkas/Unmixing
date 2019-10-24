@@ -52,92 +52,91 @@ t_transform=autoXY_shift(B(:,:,1),A(:,:,1),'nonreflective similarity');
 % now let's apply this transform to every frame in B and D
 [B1,D1,F1]=f_apply_transform_to_sequence(t_transform,B,D,F);
 %TODO: show an overlayed image with the registration results
-%% Find noise and offset
-[t_noise_sigma,t_hwbg]=f_estimate_noise_and_offset(A);
+%% Find noise and offset[t_noise_sigma,t_hwbg]=f_estimate_noise_and_offset(A);
 
 %% TODO: FRET (taketh from Vova)
 
-%% Normalize !!!remove this when FRET is implemented!!!
-A=A-t_hwbg;
-% A=f_normalize(A);
-t_hwbg=0; %<- This is very ugly and should be fixed asap
+%%% Normalize !!!remove this when FRET is implemented!!!
+%A=A-t_hwbg;
+%% A=f_normalize(A);
+%t_hwbg=0; %<- This is very ugly and should be fixed asap
 
-%% Diff (Pasha's favourite red-green variant is implemented)
-p_diff=1; %parameter
-p_mid=1; %parameter
-AD=filter(ones(1,p_mid),p_mid,f_diff(A,p_diff)); % A differentiated
+%%% Diff (Pasha's favourite red-green variant is implemented)
+%p_diff=1; %parameter
+%p_mid=1; %parameter
+%AD=filter(ones(1,p_mid),p_mid,f_diff(A,p_diff)); % A differentiated
 
-%% MASK the BG (does not account for out-of-focus fluo)
-p_n_sigma_cutoff=3; %how many sigmas to count as noise;
-t_threshold=t_hwbg+p_n_sigma_cutoff*t_noise_sigma;
-AM(A>t_threshold)=A(A>t_threshold)-t_hwbg;
-AM(A<=t_threshold)=0;
+%%% MASK the BG (does not account for out-of-focus fluo)
+%p_n_sigma_cutoff=3; %how many sigmas to count as noise;
+%t_threshold=t_hwbg+p_n_sigma_cutoff*t_noise_sigma;
+%AM(A>t_threshold)=A(A>t_threshold)-t_hwbg;
+%AM(A<=t_threshold)=0;
 
-%% Make the diff relative to total intensity in the pixel
-AT=A(:,:,1:end-p_diff); % AT= A truncated
-% ADR(AT>t_threshold)=AD(AT>t_threshold)./AT(AT>t_threshold);  % ADR = A diff relative
-% ADR(AT<=t_threshold)=0;
-% ADR=reshape(ADR,size(AT)); %indexing with logical expressions makes the output 1D, this line fixes this
+%%% Make the diff relative to total intensity in the pixel
+%AT=A(:,:,1:end-p_diff); % AT= A truncated
+%% ADR(AT>t_threshold)=AD(AT>t_threshold)./AT(AT>t_threshold);  % ADR = A diff relative
+%% ADR(AT<=t_threshold)=0;
+%% ADR=reshape(ADR,size(AT)); %indexing with logical expressions makes the output 1D, this line fixes this
 
-%% Filter the relative diff (in x,y)
-p_imfilter_averaging_kernel_size=[3 3];
-t_filter=fspecial('average',p_imfilter_averaging_kernel_size);
-% ADRF=imfilter(ADR,t_filter); %ADR filtered
+%%% Filter the relative diff (in x,y)
+%p_imfilter_averaging_kernel_size=[3 3];
+%t_filter=fspecial('average',p_imfilter_averaging_kernel_size);
+%% ADRF=imfilter(ADR,t_filter); %ADR filtered
 
-% %% clean the Absolute DIFF from the Bg pixels
-% AD(AT<t_threshold)=0;
-% ADF=imfilter(AD,t_filter);
+%% %% clean the Absolute DIFF from the Bg pixels
+%% AD(AT<t_threshold)=0;
+%% ADF=imfilter(AD,t_filter);
 
-%% Threshold the diff
-p_n_sigma_cutoff_roi=3; %how many noise SD's to count as significant
-t_threshold_roi=p_n_sigma_cutoff_roi*t_noise_sigma;
-ADF_plus=(ADF>t_threshold_roi); %this work ONLY provided the bleaching has been compensated for
-ADF_minus=(ADF<-t_threshold_roi);% this too
-%% Prepare the second derivative (from scratch)
-AD2=f_diff(AD,p_diff);
-AD2F=imfilter(AD2,t_filter);
+%%% Threshold the diff
+%p_n_sigma_cutoff_roi=3; %how many noise SD's to count as significant
+%t_threshold_roi=p_n_sigma_cutoff_roi*t_noise_sigma;
+%ADF_plus=(ADF>t_threshold_roi); %this work ONLY provided the bleaching has been compensated for
+%ADF_minus=(ADF<-t_threshold_roi);% this too
+%%% Prepare the second derivative (from scratch)
+%AD2=f_diff(AD,p_diff);
+%AD2F=imfilter(AD2,t_filter);
 
-%% Threshold the AD2F;
-% Using the sigma estimated above (t_noise_sigma) divided by sqrt(N) of the
-% averaging imfilter
-t_sqrt_n=sqrt(p_imfilter_averaging_kernel_size(1)^2+p_imfilter_averaging_kernel_size(2)^2);
-t_threshold_ad2f_roi=p_n_sigma_cutoff_roi*t_noise_sigma/t_sqrt_n;
-AD2F_plus=(AD2F>t_threshold_ad2f_roi);
+%%% Threshold the AD2F;
+%% Using the sigma estimated above (t_noise_sigma) divided by sqrt(N) of the
+%% averaging imfilter
+%t_sqrt_n=sqrt(p_imfilter_averaging_kernel_size(1)^2+p_imfilter_averaging_kernel_size(2)^2);
+%t_threshold_ad2f_roi=p_n_sigma_cutoff_roi*t_noise_sigma/t_sqrt_n;
+%AD2F_plus=(AD2F>t_threshold_ad2f_roi);
 
 
 
-%% Find 3D ROI's
-i_3drois_input=AD2F_plus;
-t_rois=bwconncomp(i_3drois_input,6);
-% %prefilter we don't need rois of less than 9 voxel
-t_roi_area=cell2mat(struct2cell(regionprops(t_rois,'Area')));
-% t_roi_index=find(t_roi_area>9);
+%%% Find 3D ROI's
+%i_3drois_input=AD2F_plus;
+%t_rois=bwconncomp(i_3drois_input,6);
+%% %prefilter we don't need rois of less than 9 voxel
+%t_roi_area=cell2mat(struct2cell(regionprops(t_rois,'Area')));
+%% t_roi_index=find(t_roi_area>9);
 
-%we don't need rois that span less then 3 frames
-%3 comes from the p_mid and should be changed to this later
-t_roi_bbox=cell2mat(struct2cell(regionprops(t_rois,'BoundingBox'))');
+%%we don't need rois that span less then 3 frames
+%%3 comes from the p_mid and should be changed to this later
+%t_roi_bbox=cell2mat(struct2cell(regionprops(t_rois,'BoundingBox'))');
 
-delete(p_roi_output_file_name);
-t_fid=fopen(p_roi_output_file_name,'w+');
-fprintf(t_fid,'x y t roin');
-fclose(t_fid);
-t_nrois=size(t_rois.PixelIdxList,2);
-for k=1:t_nrois;
-    if t_roi_area(k)>8 % we don't need rois of less than 27 voxel
-        if t_roi_bbox(k,6)>3 %we don't need rois that span less then 3 frames
-            if t_roi_area(k)<1000;
-            t_ROI=t_rois.PixelIdxList{k};
-                    [x,y,z] = ind2sub(size(i_3drois_input),t_ROI);
-%             [Fs,Vs,C_slice]=ind2patch(t_ROI,ADF_minus,'v'); %Creating patch data for selection of low voxels
-%             t_cmap=colormap(lines(t_nrois));
-%             hs=patch('Faces',Fs,'Vertices',Vs,'FaceColor',t_cmap(k,:),'FaceAlpha',0.8);
-            %         scatter3(I,J,K,1,repmat(t_cmap(k),size(K)));
-            a_out=[x y z k.*ones(size(z))];
-             save(p_roi_output_file_name,'a_out','-ascii','-append');
-             disp 'found a roi'
-            end
-        end
-    end
-end
-% daspect([1 1 1]);
-% toc
+%delete(p_roi_output_file_name);
+%t_fid=fopen(p_roi_output_file_name,'w+');
+%fprintf(t_fid,'x y t roin');
+%fclose(t_fid);
+%t_nrois=size(t_rois.PixelIdxList,2);
+%for k=1:t_nrois;
+    %if t_roi_area(k)>8 % we don't need rois of less than 27 voxel
+        %if t_roi_bbox(k,6)>3 %we don't need rois that span less then 3 frames
+            %if t_roi_area(k)<1000;
+            %t_ROI=t_rois.PixelIdxList{k};
+                    %[x,y,z] = ind2sub(size(i_3drois_input),t_ROI);
+%%             [Fs,Vs,C_slice]=ind2patch(t_ROI,ADF_minus,'v'); %Creating patch data for selection of low voxels
+%%             t_cmap=colormap(lines(t_nrois));
+%%             hs=patch('Faces',Fs,'Vertices',Vs,'FaceColor',t_cmap(k,:),'FaceAlpha',0.8);
+            %%         scatter3(I,J,K,1,repmat(t_cmap(k),size(K)));
+            %a_out=[x y z k.*ones(size(z))];
+             %save(p_roi_output_file_name,'a_out','-ascii','-append');
+             %disp 'found a roi'
+            %end
+        %end
+    %end
+%end
+%% daspect([1 1 1]);
+%% toc
